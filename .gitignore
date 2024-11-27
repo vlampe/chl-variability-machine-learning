@@ -1,3 +1,15 @@
+# my settings
+
+*.nc
+*.rds
+*.csv
+.DS_Store
+*.png
+output/plots/*
+
+
+
+## from template
 # History files
 .Rhistory
 .Rapp.history
