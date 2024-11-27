@@ -175,11 +175,12 @@ sst_map <-
          color = guide_colorbar(title = "SST [ºC]", title.position = "top", title.hjust = 0.5)) +
   theme_bw() +
   theme(legend.position = "bottom",
-        legend.box.margin = margin(t = 0),
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin=margin(-10,0,0,0),
         title = element_text(size = 8)
         )
 
-# sst_map
+sst_map
 
 
 # ICE
@@ -221,7 +222,8 @@ ice_map <-
   labs(title =paste0("SIC - ", date_highlight), x = NULL, y = NULL) +
   theme_bw() +
   theme(legend.position = "bottom",
-        legend.box.margin = margin(t = 0),
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin=margin(-10,0,0,0),
         title = element_text(size = 8))
 
 
@@ -276,14 +278,15 @@ chl_map <-
                        oob = scales::squish
                        ) +
   scale_x_continuous(breaks = seq(-30, 30, by = 10)) +
-  labs(title = expression("Chl"~italic(a)), x = NULL, y = NULL) +
-  guides(fill = guide_colorbar(title = TeX("Chl [mg m$^{-3}$]"), 
+  labs(title = expression("Chl-"*italic(a)), x = NULL, y = NULL) +
+  guides(fill = guide_colorbar(title = TeX("Chl-$a$ [mg m$^{-3}$]"), 
                                title.position = "top", title.hjust = 0.5),
-         color = guide_colorbar(title = TeX("Chl [mg m$^{-3}$]"), 
+         color = guide_colorbar(title = TeX("Chl-$a$ [mg m$^{-3}$]"), 
                                 title.position = "top", title.hjust = 0.5)) +
   theme_bw() +
   theme(legend.position = "bottom",
-        legend.box.margin = margin(t = 0),
+        legend.margin=margin(0,0,0,0),
+        legend.box.margin=margin(-10,0,0,0),
         title = element_text(size = 8))# size = 9
 
 chl_map +theme(text = element_text(color = "white"),
@@ -295,8 +298,10 @@ chl_map +theme(text = element_text(color = "white"),
 
 (sst_ts + ice_ts)/ (sst_map + ice_map + chl_map)
 
-ggarrange(ggarrange(sst_ts, ice_ts, ncol = 2, common.legend = TRUE, legend = "bottom", align = "hv"), 
-         ggarrange(sst_map, ice_map, chl_map, ncol = 3, align = "hv"),
+ggarrange(ggarrange(sst_ts, ice_ts, ncol = 2, common.legend = TRUE, 
+                    legend = "bottom", align = "hv", labels = c("a", "b")), 
+         ggarrange(sst_map, ice_map, chl_map, ncol = 3, align = "hv",
+                   labels = c("c", "d", "e")),
          nrow = 2, heights = c(1.5,2)) # dauert
 
 ggsave(paste0("output/plots/SST_Ice_ts_with_daily_maps_",date_highlight,".pdf"),
@@ -387,7 +392,7 @@ ggsave(paste0("output/plots/SST_Ice_ts_with_daily_maps_",date_highlight,"_DARK_w
 require(latex2exp)
 require(reticulate)
 reticulate::py_version()
-use_python("/opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python")
+use_python("/opt/homebrew/Cellar/python@3.11/3.11.10/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python")
 np      <- import("numpy",   convert=FALSE)
 py_csv  <- import("csv",     convert=FALSE)
 diffKDE <- import("diffKDE", convert=FALSE)
@@ -504,13 +509,14 @@ p_ice <-
                      breaks = c("cold", "front", "warm")) +
   labs(y = "prob. density", x = "SIC [%]") +
   guides(color = "none") +
-  coord_cartesian(xlim = c(0,100), ylim = c(0,.1), expand = FALSE) +
+  coord_cartesian(xlim = c(-2,102), ylim = c(0,.1), expand = FALSE) +
   theme_bw()
 # shows unstable behavior in warm and front cluster (not enough smoothing) -> adjust T final for front and warm
   
 (p_sst + p_ice + p_Chl)
 
-ggarrange(p_sst, p_ice, p_Chl, nrow = 1, common.legend = TRUE, legend = "bottom", align = "hv")
+ggarrange(p_sst, p_ice, p_Chl, nrow = 1, common.legend = TRUE, legend = "bottom", 
+          align = "h", labels = c("a", "b", "c"), widths = c(1.1,1.15,1))
 ggsave(paste0("output/plots/SST_Ice_Chl_PDF",date_highlight,".pdf"),
        height = 6, width = 15, units = "cm")
 

@@ -7,7 +7,7 @@ reticulate::py_version()
 
 # use_python("/usr/local/homebrew/Cellar/python@3.9/3.9.17/bin/python3.9") # use the arm x86_64 version!! // not anymore, since i updated R
 
-use_python("/opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python")
+use_python("/opt/homebrew/Cellar/python@3.11/3.11.10/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python")
 
 np      <- import("numpy",   convert=FALSE)
 py_csv  <- import("csv",     convert=FALSE)
