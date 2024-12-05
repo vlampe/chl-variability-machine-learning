@@ -147,28 +147,41 @@ sst_map <-
   # SST layer
   geom_sf(data = sst_sf, aes(fill = FILL, color = FILL), lwd = 0) +
   # add land masses
-  geom_sf(data = world, colour = "darkgrey", size = 0.2, fill = "grey") +
+  geom_sf(data = world, colour = "grey", size = 0.2, fill = "lightgrey") +
   # # add white underlines for warm/cold polys
   # geom_polygon(data = coldpoly, aes(x = long, y = lat, group = group), color = "white", fill = NA, linetype = "solid", size = 1.5) +
   # geom_polygon(data = warmpoly, aes(x = long, y = lat, group = group), color = "white", fill = NA, linetype = "solid", size = 1.5) +
   # 
   # add warm/cold polys
-  geom_polygon_pattern(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, pattern_fill = "blue", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
-  geom_polygon_pattern(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, pattern_fill = "red", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
-  geom_polygon_pattern(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, pattern_fill = "cornsilk4", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
-  
+  geom_polygon(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, linetype = "dashed", linewidth = 0.5) +
+  # geom_polygon_pattern(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, pattern_fill = "blue", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
+  # geom_polygon_pattern(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, pattern_fill = "red", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
+  # geom_polygon_pattern(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, pattern_fill = "cornsilk4", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
+  # 
   # set CRS
   coord_sf(crs = stereproj, xlim = c(-5e5, 5e5), ylim = c(-16.7e5, -5.3e5), #xlim war vorher 6e5
            expand = F) +
   # add colour scale for sill and colour
-  scale_color_gradientn(aesthetics = c("color", "fill"),
-                        guide = "colourbar",
-                        colors = rev(rainbow(7)),
-                        limits = c(-2.5, 8.5)+273.13,
-                        breaks = c(-2, 0, 2, 4, 6, 8, 10)+273.13,
-                        labels = format(c(-2, 0, 2, 4, 6, 8, 10)), # +273.13
-                        oob = scales::squish , na.value = NA,
-                        name = "SST \n[ºC]") +
+  scale_fill_distiller(palette = "Spectral",    # interpolated
+                       aesthetics = c("color", "fill"),
+                       guide = "colourbar",
+                       #guide = "legend",
+                       limits = c(-2.5, 8.5)+273.13,
+                       breaks = c(-2, 0, 2, 4, 6, 8, 10)+273.13,
+                       labels = format(c(-2, 0, 2, 4, 6, 8, 10)), # +273.13
+                       oob = scales::squish , na.value = NA,
+                       name = "SST \n[ºC]") +
+  # scale_color_gradientn(aesthetics = c("color", "fill"),
+  #                       guide = "colourbar",
+  #                       colors = rev(rainbow(7)),
+  #                       limits = c(-2.5, 8.5)+273.13,
+  #                       breaks = c(-2, 0, 2, 4, 6, 8, 10)+273.13,
+  #                       labels = format(c(-2, 0, 2, 4, 6, 8, 10)), # +273.13
+  #                       oob = scales::squish , na.value = NA,
+  #                       name = "SST \n[ºC]") +
   scale_x_continuous(breaks = seq(-30, 30, by = 10)) +
   labs(title = "SST", x = NULL, y = NULL) +
   guides(fill = guide_colorbar(title = "SST [ºC]", title.position = "top", title.hjust = 0.5),
@@ -197,23 +210,35 @@ ice_map <-
   # ICE layer
   geom_sf(data = ice_sf, aes(fill = FILL, color = FILL), lwd = 0) +
   # add land masses
-  geom_sf(data = world, colour = "darkgrey", size = 0.2, fill = "grey") +
+  geom_sf(data = world, colour = "grey", size = 0.2, fill = "lightgrey") +
   # # add white underlines for warm/cold polys
   # geom_polygon(data = coldpoly, aes(x = long, y = lat, group = group), color = "white", fill = NA, linetype = "solid", size = 1.5) +
   # geom_polygon(data = warmpoly, aes(x = long, y = lat, group = group), color = "white", fill = NA, linetype = "solid", size = 1.5) +
   # 
   # add warm/cold polys
-  geom_polygon_pattern(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, pattern_fill = "blue", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
-  geom_polygon_pattern(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, pattern_fill = "red", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
-  geom_polygon_pattern(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, pattern_fill ="cornsilk4", pattern_density = 0.1, pattern_colour = NA,linetype = "dashed", linewidth = 0.7) +
+  geom_polygon(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, linetype = "dashed", linewidth = 0.5) +
+  # geom_polygon_pattern(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, pattern_fill = "blue", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
+  # geom_polygon_pattern(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, pattern_fill = "red", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
+  # geom_polygon_pattern(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, pattern_fill ="cornsilk4", pattern_density = 0.1, pattern_colour = NA,linetype = "dashed", linewidth = 0.7) +
   
   # set CRS
   coord_sf(crs = stereproj, xlim = c(-5e5, 5e5), ylim = c(-16.7e5, -5.3e5), #xlim war vorher 6e5
            expand = F) +
-  scale_color_gradient2(aesthetics = c("color", "fill"),
-                        low = "blue", mid = "white", high = "red", midpoint = 0.15,
-                        breaks = c(0.15, 0.3, 0.6, 0.9),
-                        labels = c(0.15, 0.3, 0.6, 0.9)*100,
+  # scale_color_gradient2(aesthetics = c("color", "fill"),
+  #                       low = "blue", mid = "white", high = "red", midpoint = 0.15,
+  #                       breaks = c(0.15, 0.3, 0.6, 0.9),
+  #                       labels = c(0.15, 0.3, 0.6, 0.9)*100,
+  #                       limits = c(0, 1),
+  #                       name = "SIC \n[%]") +
+  scale_color_gradientn(aesthetics = c("color", "fill"),  # continuous
+                        colors = c("#2166AC", "#D1E5F0", "white", "#FDDBC7", "#EF8A62", "#B2182B") ,
+                        values = c(0, 0.1, 0.15, 0.3, 0.6, 1),
+                        breaks = c(0, 0.1, 0.15, 0.3, 0.6, 0.9),
+                        labels = c("", "", "15", "30", "60", "90"),
+                        #guide = "legend",
                         limits = c(0, 1),
                         name = "SIC \n[%]") +
   guides(fill = guide_colorbar(title = "SIC [%]", title.position = "top", title.hjust = 0.5),
@@ -252,15 +277,19 @@ chl_map <-
   # chl layer
   geom_sf(data = chl_sf, aes(fill = FILL, color = FILL), lwd = 0) +
   # add land masses
-  geom_sf(data = world, colour = "darkgrey", size = 0.2, fill = "grey") +
+  geom_sf(data = world, colour = "grey", size = 0.2, fill = "lightgrey") +
   # add white underlines for warm/cold polys
   # geom_polygon(data = coldpoly, aes(x = long, y = lat, group = group), color = "white", fill = NA, linetype = "solid", size = 1.5) +
   # geom_polygon(data = warmpoly, aes(x = long, y = lat, group = group), color = "white", fill = NA, linetype = "solid", size = 1.5) +
   # 
   # add warm/cold polys
-  geom_polygon_pattern(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, pattern_fill = "blue", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
-  geom_polygon_pattern(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, pattern_fill = "red", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
-  geom_polygon_pattern(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, pattern_fill = "cornsilk4", pattern_density = 0.1, pattern_colour = NA,linetype = "dashed", linewidth = 0.7) +
+  geom_polygon(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, linetype = "solid", linewidth = 0.7) +
+  geom_polygon(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, linetype = "dashed", linewidth = 0.5) +
+  # geom_polygon_pattern(data = coldpoly, aes(x = long, y = lat, group = group), color = "blue", fill = NA, pattern_fill = "blue", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
+  # geom_polygon_pattern(data = warmpoly, aes(x = long, y = lat, group = group), color = "red", fill = NA, pattern_fill = "red", pattern_density = 0.1, pattern_colour = NA, linetype = "dashed", linewidth = 0.7) +
+  # geom_polygon_pattern(data = frontpoly, aes(x = long, y = lat, group = group), color = "cornsilk4", fill = NA, pattern_fill = "cornsilk4", pattern_density = 0.1, pattern_colour = NA,linetype = "dashed", linewidth = 0.7) +
   
   # set CRS
   coord_sf(crs = stereproj, xlim = c(-5e5, 5e5), ylim = c(-16.7e5, -5.3e5), #xlim war vorher 6e5
@@ -269,7 +298,7 @@ chl_map <-
   #                      na.value = "", name = "Chl \n[mg /m^3]", trans = "log10", 
   #                      breaks = c(0.1, 0.3, 1, 3, 10), limits = c(0.1, 10)) +
   scale_fill_gradientn(aesthetics = c("color", "fill"), 
-                       colours = rev(pals::ocean.algae(100)), #, limits = c(0,6), pals::ocean.algae(10) oce::oceColorsPalette(120)
+                       colours = rev(pals::ocean.algae(5)), #, limits = c(0,6), pals::ocean.algae(10) oce::oceColorsPalette(120)
                        na.value = "", 
                        name = "Chl \n[mg /m^3]", 
                        trans = "log10", 
@@ -298,6 +327,7 @@ chl_map +theme(text = element_text(color = "white"),
 
 (sst_ts + ice_ts)/ (sst_map + ice_map + chl_map)
 
+quartz()
 ggarrange(ggarrange(sst_ts, ice_ts, ncol = 2, common.legend = TRUE, 
                     legend = "bottom", align = "hv", labels = c("a", "b")), 
          ggarrange(sst_map, ice_map, chl_map, ncol = 3, align = "hv",
@@ -499,7 +529,8 @@ p_Chl <-
   scale_color_manual(aesthetics =c("colour"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
                      breaks = c("cold", "front", "warm")) +
   labs(y = "prob. density", x = TeX("Chl \\textit{a} [mg m$^{-3}$]")) +
-  coord_cartesian(xlim = c(0,2), ylim = c(0,5), expand = FALSE) +
+  coord_cartesian(xlim = c(0,1.55), ylim = c(0,5), expand = FALSE) +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5))+
   theme_bw()
 
 p_ice <- 
