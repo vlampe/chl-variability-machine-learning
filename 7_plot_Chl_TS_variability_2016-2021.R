@@ -248,8 +248,9 @@ ggplot(data = results, aes(x = `date`, y= `median`, colour = `cluster`)) +
                   ymax = `CI_u`, 
                   fill = `cluster`), alpha = .1, linetype = 0) +
   scale_x_date(name = "",
-               date_breaks = "1 month",
-               date_labels = "%b") +
+               date_breaks = "3 month",
+               date_minor_breaks = "1 month",
+               date_labels = "%b %y") +
   #scale_y_continuous(breaks = c(0.1, 1, 2, 4, 8, 12, 16)) +
   # labs(y = expression(paste("Chl ", italic("a"), " mg ", m^{-3})), colour = "cluster") +
   labs(y = TeX(paste0("Chl \\textit{a}", " [", yunit, "]")), colour = "cluster",
@@ -260,7 +261,7 @@ ggplot(data = results, aes(x = `date`, y= `median`, colour = `cluster`)) +
   # coord_cartesian(ylim=c(0, 4), xlim = as.Date(c("2018-03-01", "2018-10-15")), expand = F) +
   #coord_trans(y = "log10", ylim=c(0.1, NA), xlim = as.Date(c("2018-03-01", "2018-10-15")), expand = F) +
   #annotation_logticks(scaled = F) +
-  facet_grid(cluster~.) +
+#  facet_grid(cluster~.) +
   theme_bw()
 ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_3k_2016-2021.pdf"))
 

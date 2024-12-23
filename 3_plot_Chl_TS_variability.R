@@ -16,7 +16,7 @@ library(extrafont)
 library(Cairo)
 
 reticulate::py_version()
-use_python("/opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python")
+use_python("/opt/homebrew/Cellar/python@3.11/3.11.11/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python")
 np      <- import("numpy",   convert=FALSE)
 py_csv  <- import("csv",     convert=FALSE)
 diffKDE <- import("diffKDE", convert=FALSE)
