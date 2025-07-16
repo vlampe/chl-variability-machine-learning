@@ -269,6 +269,38 @@ p + labs(title = NULL)
 ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_3k.pdf"), 
        width = 15, height = 14, units = "cm")
 
+# plot with 1 mg m-3 line as vidual help for bloom threshold, as requested by R1
+p_rev1 <- ggplot(data = results, aes(x = `date`, y= `median`, colour = `cluster`)) + 
+  geom_abline(intercept = 1, slope = 0, linetype = "solid", color = "gold", linewidth = 0.3) +
+  geom_line() +
+  geom_line(aes(y = `mean`), linetype = "dotted") +
+  geom_ribbon(aes(ymin = `IQR_l`, 
+                  ymax = `IQR_u`, 
+                  fill = `cluster`), alpha = .3, linetype = 0) +
+  geom_ribbon(aes(ymin = `CI_l`, 
+                  ymax = `CI_u`, 
+                  fill = `cluster`), alpha = .1, linetype = 0) +
+  scale_x_date(name = "",
+               date_breaks = "1 month",
+               date_labels = "%b") +
+  scale_y_continuous(breaks = c(0.1, 0.5, 1, 2, 4, 8)) +
+  # labs(y = expression(paste("Chl ", italic("a"), " mg ", m^{-3})), colour = "cluster") +
+  labs(y = TeX(paste0("Chl \\textit{a}", " [", yunit, "]")), colour = "cluster",
+       title = paste0("normalised: ", normalise, " trans: ", chl_trans)) +
+  scale_color_manual(aesthetics =c("colour", "fill"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
+                     breaks = c("cold", "front", "warm")) +
+  # guides(fill = "none") +
+  coord_cartesian(ylim=c(0, 4), xlim = as.Date(c("2018-03-01", "2018-10-15")), expand = F) +
+  coord_trans(y = "log10", ylim=c(0.1, NA), xlim = as.Date(c("2018-03-01", "2018-10-15")), expand = F) +
+  annotation_logticks(scaled = F) +
+  facet_grid(cluster~.) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+p_rev1 + labs(title = NULL)
+ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_3k_rev1.pdf"), 
+       width = 15, height = 14, units = "cm")
+
+
 # save for Verteidigung (Also adjust alpha of CIs... before plotting, and change back to 0.3 and 0.1)
 p + 
   annotation_logticks(scaled = F, color = "white") +
@@ -323,6 +355,15 @@ ggplot(data = results, aes(x = `date`, y = `IQR_u` - `IQR_l`, colour = `cluster`
   theme_bw()
 ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_IQR_3k.pdf"))
 
+
+## get post-bloom chl-a concentrations 
+tst <- results %>%
+  filter((date > as.Date("2018-06-25")) & (date < as.Date("2018-09-15"))) %>%
+  group_by(cluster) %>%
+  summarise(mean = mean(mean, na.rm = T),
+            median = mean(median, na.rm = T), 
+            CI_l = mean(CI_l, na.rm = T), 
+            n = n())
 
 
 #...............................................................................
@@ -504,6 +545,35 @@ ggplot(data = results, aes(x = `date`)) +
   theme_bw()
 
 
+# using the normalised log trans results:
+# plot the number of observations per cluster
+ggplot(data = results, aes(x = `date`, y = n.obs, colour = `cluster`)) +
+  geom_line() +
+  labs(x = "Date", y = TeX("Number of Chl-$\\textit{a}$ observations [pixels]")) +
+  facet_grid(cluster~.) +
+  scale_x_date(name = "",
+               date_breaks = "1 month",
+               date_labels = "%b") +
+  scale_color_manual(aesthetics =c("colour", "fill"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
+                     breaks = c("cold", "front", "warm")) +
+  coord_cartesian(ylim=c(NA, NA), xlim = as.Date(c("2018-03-01", "2018-10-15")), expand = F) +
+  theme_bw() +
+  theme(legend.position = "bottom", 
+        title = element_text(size = 8))
+ggsave(paste0("output/plots/appx_Chl_obs_2018_rev1.pdf"),
+       width = 15, height = 14, units = "cm")
+# get average n.obs per cluster from March to October
+tst <- results %>%
+  filter((date > as.Date("2018-03-01")) & (date < as.Date("2018-10-01"))) %>%
+  group_by(cluster) %>%
+  summarise(mean.nobs = mean(n.obs, na.rm = T), # there are no nans in n.obs
+            mean.nobs2 = mean(n.obs), 
+            n = n())
+tst
+
+
+
+
 
 ## plot coefficient of variation:
 # normalised, log-transformed IQR/median or IQR/mean  -> multiply this by 100, get % deviation 
@@ -528,6 +598,8 @@ ggplot(data = results, aes(x = `date`, y = ((`IQR_u` - `IQR_l`)/`mean`)*100, col
 ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_CV_3k.pdf"))
 
 
+
+## ___________________________________________________________________________
 ## plot scatterplot of CI-Range vs chl-conc
 normalise = FALSE
 chl_trans = "no_trans"
@@ -557,7 +629,8 @@ p2 <- ggplot(data = results, aes(x = mean, y = (`CI_u` - `CI_l`), color = cluste
 #  geom_smooth(method = "lm")+
   scale_color_manual(aesthetics =c("colour", "fill"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
                      breaks = c("cold", "front", "warm")) +
-  labs(x = TeX("Mean log$_{10} \\left(\\frac{Chl~\\textit{a}}{0.1~mg~m^{-3}}\\right)$"),
+  labs(#x = TeX("Mean log$_{10} \\left(\\frac{Chl \\textit{a}}{0.1~mg~m^{-3}}\\right)$"),
+       x = expression('Mean log'[10]*bgroup('(', frac(Chl*~italic(a), 0.1*~mg~m^{phantom() - 3}) * phantom(.), ')')),
        y = TeX("$\\Delta$CI95")) +
   theme_bw() +
   theme(legend.position = "bottom",
@@ -573,7 +646,99 @@ p_a <- ggpubr::ggarrange(p1, p2, common.legend = T, legend = "bottom", align = "
 ggsave(paste0("output/plots/Chl_norm", normalise, "_no_AND_log_trans_Var_rel_Conc_3k.pdf"),
        height = 9, width = 15, units = "cm",  device = cairo_pdf)
 
+## ___________________________________________________________________________
+## plot scatterplot of CI-Range vs chl-conc; with linear regression lines as suggested by Reviewer (R2, 19)
 
+
+normalise = FALSE
+chl_trans = "no_trans"
+
+results <- read_csv2(paste0("output/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_3k.csv"))
+lmod_cold <- lm((`CI_u` - `CI_l`) ~ mean - 1, data = results, subset = cluster=="cold")
+lmod_front <- lm((`CI_u` - `CI_l`) ~ mean - 1, data = results, subset = cluster=="front")
+lmod_warm <- lm((`CI_u` - `CI_l`) ~ mean - 1, data = results, subset = cluster=="warm")
+# summary(lm)
+# predict(lmod_cold, data.frame(mean=c(1:5)))
+confint(lmod_cold, 'mean', level = 0.95)[[1]] # get 95% CI for the estimate of "mean" 
+
+
+pred_lm <- data.frame(mean=c(0:5)) %>%
+  mutate(predCI_cold = mean * lmod_cold$coefficients[['mean']],
+         predCI_front = mean * lmod_front$coefficients[['mean']],
+         predCI_warm = mean * lmod_warm$coefficients[['mean']]) %>%
+  pivot_longer(cols = -mean, names_prefix = "predCI_") %>%
+  mutate(lower_val = case_when(name == "cold" ~ mean * confint(lmod_cold, 'mean', level = 0.95)[[1]],
+                               name == "warm" ~ mean * confint(lmod_warm, 'mean', level = 0.95)[[1]],
+                               name == "front" ~ mean * confint(lmod_front, 'mean', level = 0.95)[[1]]),
+         upper_val = case_when(name == "cold" ~ mean * confint(lmod_cold, 'mean', level = 0.95)[[2]],
+                               name == "warm" ~ mean * confint(lmod_warm, 'mean', level = 0.95)[[2]],
+                               name == "front" ~ mean * confint(lmod_front, 'mean', level = 0.95)[[2]])
+         )
+
+ p1 <- 
+  ggplot() +
+   geom_ribbon(data=pred_lm, aes(x = mean, ymin = lower_val, ymax = upper_val, 
+                                 fill = name), alpha = 0.3) +
+   geom_line(data=pred_lm, aes(x=mean, y=value, color = name)) +
+  geom_point(data = results, aes(x = mean, y = (`CI_u` - `CI_l`), color = cluster)) +
+  #  geom_smooth(method = "lm")+ # show linear regression lines
+  scale_color_manual(aesthetics =c("colour", "fill"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
+                     breaks = c("cold", "front", "warm")) +
+  labs(x = TeX("Mean Chl \\textit{a} concentration [mg m$^{-3}$]"),
+       y = TeX("$\\Delta$CI95 [mg m$^{-3}$]")) +
+  coord_cartesian(xlim=c(0,4.8), expand = F)+
+  theme_bw() +
+  theme(legend.position = "bottom",
+        text = element_text(family = "sans"))
+p1
+
+
+normalise = FALSE
+chl_trans = "log_trans"
+
+results <- read_csv2(paste0("output/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_3k.csv"))
+lmod_cold <- lm((`CI_u` - `CI_l`) ~ mean - 1, data = results, subset = cluster=="cold")
+lmod_front <- lm((`CI_u` - `CI_l`) ~ mean - 1, data = results, subset = cluster=="front")
+lmod_warm <- lm((`CI_u` - `CI_l`) ~ mean - 1, data = results, subset = cluster=="warm")
+
+# summary(lmod_cold)
+pred_lm <- data.frame(mean=seq(0,1.55, by=0.1)) %>%
+  mutate(predCI_cold = mean * lmod_cold$coefficients[['mean']],
+         predCI_front = mean * lmod_front$coefficients[['mean']],
+         predCI_warm = mean * lmod_warm$coefficients[['mean']]) %>%
+  pivot_longer(cols = -mean, names_prefix = "predCI_") %>%
+  mutate(lower_val = case_when(name == "cold" ~ mean * confint(lmod_cold, 'mean', level = 0.95)[[1]],
+                               name == "warm" ~ mean * confint(lmod_warm, 'mean', level = 0.95)[[1]],
+                               name == "front" ~ mean * confint(lmod_front, 'mean', level = 0.95)[[1]]),
+         upper_val = case_when(name == "cold" ~ mean * confint(lmod_cold, 'mean', level = 0.95)[[2]],
+                               name == "warm" ~ mean * confint(lmod_warm, 'mean', level = 0.95)[[2]],
+                               name == "front" ~ mean * confint(lmod_front, 'mean', level = 0.95)[[2]]))
+
+p2 <- ggplot() +
+  geom_ribbon(data=pred_lm, aes(x = mean, ymin = lower_val, ymax = upper_val, 
+                                fill = name), alpha = 0.3) +
+  geom_line(data=pred_lm, aes(x=mean, y=value, color = name)) +
+  geom_point(data = results, aes(x = mean, y = (`CI_u` - `CI_l`), color = cluster)) +
+  #  geom_smooth(method = "lm")+
+  scale_color_manual(aesthetics =c("colour", "fill"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
+                     breaks = c("cold", "front", "warm")) +
+  labs(#x = TeX("Mean log$_{10} \\left(\\frac{Chl \\textit{a}}{0.1~mg~m^{-3}}\\right)$"),
+    x = expression('Mean log'[10]*bgroup('(', frac(Chl*~italic(a), 0.1*~mg~m^{phantom() - 3}) * phantom(.), ')')),
+    y = TeX("$\\Delta$CI95")) +
+  coord_cartesian(xlim=c(0,1.55), expand = F)+
+  theme_bw() +
+  theme(legend.position = "bottom",
+        text = element_text(family = "sans"))
+p2
+
+p_a <- ggpubr::ggarrange(p1, p2, common.legend = T, legend = "bottom", align = "hv", labels = "auto")
+p_a
+ggsave(paste0("output/plots/Chl_norm", normalise, "_no_AND_log_trans_Var_rel_Conc_3k_update.pdf"),
+       height = 9, width = 15, units = "cm",  device = pdf)
+
+
+
+## ___________________________________________________________________________
 # try: shape for cluters, color for date
 ggplot(data = results, aes(x = mean, y = (`CI_u` - `CI_l`), shape = cluster, color = date)) +
   geom_point() +

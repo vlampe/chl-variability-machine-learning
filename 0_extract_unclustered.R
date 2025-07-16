@@ -244,7 +244,36 @@ ggplot(data = results, aes(x = `date`, y= `median`, colour = `cluster`)) +
   annotation_logticks(scaled = F) +
   scale_y_continuous(breaks = c(0.1, 0.5, 1, 5, 10, 15)) +
 #  facet_grid(cluster~.) +
-  theme_bw()
-ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_0k.pdf"),
+  theme_bw() -> gg
+ggsave(plot = gg, filename = paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_0k.pdf"),
               width = 15, height = 8, units = "cm")
 
+ggplot(data = results, aes(x = `date`, y= `median`, colour = `cluster`)) + 
+  geom_abline(intercept = 1, slope = 0, linetype = "solid", color = "gold", linewidth = 0.3) +
+  geom_line() +
+  geom_line(aes(y = `mean`), linetype = "dotted") +
+  geom_ribbon(aes(ymin = `IQR_l`, 
+                  ymax = `IQR_u`, 
+                  fill = `cluster`), alpha = .3, linetype = 0) +
+  geom_ribbon(aes(ymin = `CI_l`, 
+                  ymax = `CI_u`, 
+                  fill = `cluster`), alpha = .1, linetype = 0) +
+  scale_x_date(name = "",
+               date_breaks = "1 month",
+               date_labels = "%b") +
+  #scale_y_continuous(breaks = c(0.1, 1, 2, 4, 8, 12, 16)) +
+  # labs(y = expression(paste("Chl ", italic("a"), " mg ", m^{-3})), colour = "cluster") +
+  labs(y = TeX(paste0("Chl \\textit{a}", " [", yunit, "]")), colour = "cluster",
+       #        title = paste0("normalised: ", normalise, " trans: ", chl_trans)) +
+       title = NULL) +
+  scale_color_manual(aesthetics =c("colour", "fill"), values = c("total" = "black", "warm" = "red", "cold" = "blue","front" = "grey"), 
+                     breaks = c("total", "cold", "front", "warm")) +
+  guides(fill = "none", color = "none") +
+  #  coord_cartesian(ylim=c(0, 6), xlim = as.Date(c("2018-03-01", "2018-10-15")), expand = F) +
+  coord_trans(y = "log10", ylim=c(0.1, NA), xlim = as.Date(c("2018-03-01", "2018-10-15")), expand = F) +
+  annotation_logticks(scaled = F) +
+  scale_y_continuous(breaks = c(0.1, 0.5, 1, 5, 10, 15)) +
+  #  facet_grid(cluster~.) +
+  theme_bw() -> gg_new
+ggsave(plot = gg_new, filename = paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_timeseries_variability_0k_rev1.pdf"),
+       width = 15, height = 8, units = "cm")

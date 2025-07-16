@@ -293,7 +293,7 @@ ggplot(data = results, aes(x = `date`)) +
 # plot IQR and number of observations
 ggplot(data = results, aes(x = `date`)) + 
   geom_line(aes(y= (`IQR_u`-`IQR_l`)*10000)) +
-  geom_line(aes(y = `n.obs`), linetype = "dotted") + 
+  geom_line(aes(y = `n.obs`), linetype = "dotted", color = "red") + 
   scale_x_date(name = "",
                date_breaks = "1 month",
                date_labels = "%b") +
@@ -307,7 +307,8 @@ ggplot(data = results, aes(x = `date`)) +
 
 results2 <- results %>%
   mutate(`year` = year(`date`),
-         year_date = as.Date(paste(day(`date`),month(`date`),"2000", sep = "-"), format = "%d-%m-%Y"))
+         year_date = as.Date(paste(day(`date`),month(`date`),"2000", sep = "-"), format = "%d-%m-%Y"),
+         IQR_l = pmax(IQR_l, 0.01))
 
 
 p <- ggplot(data = results2, aes(x = `year_date`, y= `median`, colour = `cluster`)) + 
@@ -333,6 +334,59 @@ p <- ggplot(data = results2, aes(x = `year_date`, y= `median`, colour = `cluster
   theme(legend.position = "bottom")
 p + labs(title = NULL)
 ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_stack_timeseries_IQR_3k_2016-2021.pdf"),
+       width = 15, height = 16, units = "cm")
+
+## revised plot, after comments of R1 and R2: 
+
+## edit with reviewers comments 
+tsdat <- read_csv2("output/Output_3k_cluster_analysis_2016-2021.csv") %>%
+  dplyr::select(c("julian day", "date", "ice cover warm region [%]", 
+           "ice cover front region [%]", "ice cover cold region [%]")) %>%
+  mutate(`year` = year(`date`),
+         `month` = month(`date`),
+         year_date = as.Date(paste(day(`date`),month(`date`),"2000", sep = "-"), format = "%d-%m-%Y")) %>%
+  pivot_longer(cols = c("ice cover warm region [%]", "ice cover front region [%]", 
+                        "ice cover cold region [%]"),
+               names_pattern = "\\b(warm|cold|front)\\b",
+               names_to = "cluster", 
+               values_to = "ice cover [%]"
+  ) %>%
+  group_by(month, year, cluster) %>%
+  summarise(avg_ice = mean(`ice cover [%]`)*100, 
+            year_date = first(year_date)) 
+
+
+p_rev1 <- ggplot(data = results2, aes(x = `year_date`, y= `median`, colour = `cluster`)) + 
+  geom_abline(intercept = 1, slope = 0, linetype = "solid", color = "gold", linewidth = 0.3) +
+  geom_ribbon(aes(ymin = `IQR_l`, 
+                  ymax = `IQR_u`, 
+                  fill = `cluster`), alpha = .1, linetype = 0) +
+  geom_line(linewidth = 0.2) +
+  geom_line(aes(y=`mean`), linetype = "dotted") +
+  geom_text(data = filter(tsdat, cluster == "cold"), aes(x = year_date+11, y = 4.5, 
+                              label = signif(avg_ice, digits=2),
+                              colour = cluster), show.legend = F, size = 3, vjust = 0)+ 
+  geom_text(data = filter(tsdat, cluster == "front"), 
+            aes(x = year_date+20, y = 4.5, label = signif(round(avg_ice,1), digits=2), colour = cluster),
+            show.legend = F, size = 3, vjust = 0)+ 
+  scale_x_date(name = "",
+               date_breaks = "1 month",
+               date_labels = "%b") +
+  scale_y_continuous(breaks = c(0.1, 0.5, 1, 2, 4, 8)) +
+  labs(y = TeX(paste0("Chl \\textit{a}", " [", yunit, "]")), colour = "cluster",
+       title = paste0("normalised: ", normalise, " trans: ", chl_trans)) +
+  scale_color_manual(aesthetics =c("colour", "fill"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
+                     breaks = c("cold", "front", "warm")) +
+  #  scale_color_brewer(aesthetics = c("color", "fill"), type = "qual", palette = "Dark2", 
+  #                     limits = c("front", "warm", "cold"))+
+  #  coord_cartesian(ylim=c(0, 4), xlim = as.Date(c("2000-03-01", "2000-10-15")), expand = F) +
+  coord_trans(y = "log10", ylim=c(0.1, 8), xlim = as.Date(c("2000-03-01", "2000-10-09")), expand = F, clip = "on")+
+  annotation_logticks(scaled = F) +
+  facet_grid(year~.) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+p_rev1 + labs(title = NULL)
+ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_stack_timeseries_IQR_3k_2016-2021_rev1.pdf"),
        width = 15, height = 16, units = "cm")
 
 
@@ -378,6 +432,27 @@ p
 ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_anomaly_yearly_mean_3k_2016-2021.pdf"),
        width = 15, height = 7.5, units = "cm")
 
+
+p_rev1 <- ggplot(results3, aes(year_date, anomaly, color = year)) +
+  geom_line(linewidth = 0.4) +
+  scale_color_manual(values = RColorBrewer::brewer.pal(6, "Dark2")) +
+  coord_cartesian(xlim = as.Date(c("2000-03-01", "2000-10-15")), expand = F) +
+  scale_x_date(name = "",
+               date_breaks = "1 month",
+              # date_labels = c("M", "A", "M", "J", "J", "A", "S", "O")) + # %b for 3-letter-abbrv.
+              date_labels = "%b") +
+  labs(x = "Month", y = TeX(paste0("Chl \\textit{a} anomaly [", yunit, "]")),
+       color = "year") +
+  facet_grid(cluster~.) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.direction = "horizontal")
+p_rev1 + 
+  labs(title = NULL) +
+  guides(color=guide_legend(nrow=1, title.position = "left", title = "Year"))
+ggsave(paste0("output/plots/Chl_norm", normalise, "_", chl_trans, "_anomaly_yearly_mean_3k_2016-2021_rev1.pdf"),
+       width = 15, height = 14, units = "cm")
+
 # save vor Verteidigung
 p + theme(text = element_text(color = "white"),
         panel.background = element_rect(fill = NA, color = "white"),
@@ -391,5 +466,59 @@ p + theme(text = element_text(color = "white"),
         strip.text = element_text(color = "white"))
 ggsave(paste0("~/Documents/Verteidigung/plots/figures_paper3/Chl_norm", normalise, "_", chl_trans, "_anomaly_yearly_mean_3k_2016-2021.pdf"),
        width = 15, height = 7.5, units = "cm")
+
+
+
+# new plot: day of year of max chla throughout the years
+
+test <- results3 %>%
+  mutate(doy = julian(year_date, origin=as.Date("2000-01-01"))+1) %>%
+  ungroup() %>%
+  slice_max(mean, by=c(cluster, year))
+# this results in 2020 finding the max in autumn (based on 4 pixels), which is probably just an artifact; therefore exclude sept 2020 first!
+
+test <- results3 %>%
+  mutate(doy = julian(year_date, origin=as.Date("2000-01-01"))+1) %>%
+  filter(doy < 260) %>%
+  ungroup() %>%
+  slice_max(mean, by=c(cluster, year))
+
+maxplot <- ggplot(data=test, aes(x=year_date, y=year, color=cluster, shape = cluster)) +
+  geom_point(size = 2) +
+  labs(y=NULL)+
+  geom_text(aes(label=round(mean,2)), nudge_y = 0.25, show.legend=F, size = 3) +
+  scale_color_manual(aesthetics =c("colour"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
+                     breaks = c("cold", "front", "warm")) +
+  scale_x_date(name = "",
+               date_breaks = "2 week", date_minor_breaks = "1 day",
+               date_labels = "%b %d") +
+  theme_bw()
+maxplot
+# cool
+
+
+# when does the mean Chl-a first cross the bloom threshold?
+test2 <- results3 %>%
+  mutate(doy = julian(year_date, origin=as.Date("2000-01-01"))+1) %>%
+  filter(mean >= 1) %>%
+  ungroup() %>%
+  slice_min(doy, by=c(cluster, year))
+
+firstplot <- ggplot(data = test2, aes(x=year_date, y=year, color=cluster, shape = cluster)) +
+  geom_point(size=2) +
+  labs(y=NULL)+
+  scale_color_manual(aesthetics =c("colour"), values = c("warm" = "red", "cold" = "blue","front" = "cornsilk4"), 
+                     breaks = c("cold", "front", "warm")) +
+  scale_x_date(name = "",
+               date_breaks = "1 month", date_minor_breaks = "1 day",
+               date_labels = "%b %d") +
+  theme_bw()
+  # geom_jitter(width=1,height = 0)
+firstplot
+
+library(ggpubr)
+ggarrange(firstplot, maxplot, common.legend = T, legend = "bottom", align = "hv", labels = "auto")
+ggsave(paste0("output/plots/First_and_max_bloom_per_cluster_2016-2021.pdf"),
+       height = 8, width = 15, units = "cm",  device = pdf)
 
   
